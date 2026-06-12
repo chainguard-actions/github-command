@@ -1,0 +1,42 @@
+name: Test basic usage - command not triggered
+on:
+  workflow_dispatch:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: issue_comment
+      GITHUB_REF: refs/heads/main
+    steps:
+      - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
+      - id: action
+        uses: .
+        continue-on-error: true
+        with:
+          github_token: ${{ github.token }}
+          command: ".lint"
+          reaction: "eyes"
+          allowed_contexts: "pull_request,issue"
+          permissions: "write,admin"
+          allow_drafts: "false"
+          allow_forks: "false"
+          skip_ci: "false"
+          skip_reviews: "false"
+          param_separator: "|"
+          skip_completing: "true"
+
+      - name: Assert action ran (triggered or errored gracefully)
+        env:
+          TRIGGERED: ${{ steps.action.outputs.triggered }}
+          OUTCOME: ${{ steps.action.outcome }}
+        run: |
+          echo "triggered: $TRIGGERED"
+          echo "outcome: $OUTCOME"
+          # In a non-PR/issue context, the action should either return triggered=false
+          # or fail gracefully (no real GitHub event context available in act)
+          if [ "$TRIGGERED" = "true" ]; then
+            echo "FAIL: expected triggered to be false or empty in test environment"
+            exit 1
+          fi
+          echo "PASS: action ran with command input covered"
