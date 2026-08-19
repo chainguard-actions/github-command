@@ -1,18 +1,20 @@
-name: Test basic usage - no trigger
+name: Test issue context - not allowed
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: issue_comment
+      GITHUB_REF: refs/heads/main
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
-
       - id: action
         uses: .
-        continue-on-error: true
         with:
-          command: ".deploy"
-          reaction: "eyes"
+          github_token: ${{ github.token }}
+          command: ".lint"
+          reaction: "rocket"
           allowed_contexts: "pull_request"
           permissions: "write,admin"
           allow_drafts: "false"
@@ -22,14 +24,15 @@ jobs:
           param_separator: "|"
           allowlist: "false"
           skip_completing: "true"
+        continue-on-error: true
 
-      - name: Assert action failed gracefully outside issue_comment context
+      - name: Assert triggered is not true
         env:
-          OUTCOME: ${{ steps.action.outcome }}
+          TRIGGERED: ${{ steps.action.outputs.triggered }}
         run: |
-          echo "outcome: '$OUTCOME'"
-          if [ "$OUTCOME" != "failure" ]; then
-            echo "FAIL: expected outcome='failure' when run outside issue_comment context, got '$OUTCOME'"
+          echo "triggered: $TRIGGERED"
+          if [ "$TRIGGERED" = "true" ]; then
+            echo "FAIL: expected triggered to be false or empty"
             exit 1
           fi
-          echo "PASS: action correctly failed when not in issue_comment context"
+          echo "PASS: triggered is '$TRIGGERED'"

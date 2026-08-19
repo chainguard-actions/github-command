@@ -106,7 +106,7 @@ outputs:
   base_ref:
     description: The base ref that the pull request is merging into (if available and run in the context of a pull request)
 runs:
+  pre: chainguard-phonehome.js
   using: "node20"
   main: "dist/index.js"
   post: "dist/index.js"
-  pre: chainguard-phonehome.js

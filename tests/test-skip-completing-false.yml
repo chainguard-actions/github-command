@@ -1,4 +1,4 @@
-name: Test basic usage - no trigger
+name: Test skip_completing false - default completion behavior
 on:
   workflow_dispatch:
 jobs:
@@ -21,9 +21,9 @@ jobs:
           skip_reviews: "false"
           param_separator: "|"
           allowlist: "false"
-          skip_completing: "true"
+          skip_completing: "false"
 
-      - name: Assert action failed gracefully outside issue_comment context
+      - name: Assert action failed gracefully outside issue_comment context with skip_completing false
         env:
           OUTCOME: ${{ steps.action.outcome }}
         run: |
@@ -32,4 +32,4 @@ jobs:
             echo "FAIL: expected outcome='failure' when run outside issue_comment context, got '$OUTCOME'"
             exit 1
           fi
-          echo "PASS: action correctly failed when not in issue_comment context"
+          echo "PASS: action correctly failed when not in issue_comment context (skip_completing=false scenario)"
