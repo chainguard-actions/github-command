@@ -1,4 +1,4 @@
-name: Test basic usage - command not triggered
+name: Test issue context - command not triggered
 on:
   workflow_dispatch:
 jobs:
@@ -9,9 +9,9 @@ jobs:
       - id: action
         uses: .
         with:
-          command: ".deploy"
-          reaction: "eyes"
-          allowed_contexts: "pull_request"
+          command: ".lint"
+          reaction: "rocket"
+          allowed_contexts: "issue,pull_request"
           permissions: "write,admin"
           allow_drafts: "false"
           allow_forks: "false"
@@ -21,16 +21,16 @@ jobs:
           skip_completing: "true"
         continue-on-error: true
 
-      - name: Assert triggered is false
+      - name: Assert triggered is false or empty
         env:
           TRIGGERED: ${{ steps.action.outputs.triggered }}
         run: |
           echo "triggered: $TRIGGERED"
           if [ "$TRIGGERED" = "true" ]; then
-            echo "FAIL: expected triggered to be false or empty under workflow_dispatch"
+            echo "FAIL: expected triggered to be false or empty under workflow_dispatch with issue context"
             exit 1
           fi
-          echo "PASS: triggered is not true (as expected with no PR comment context)"
+          echo "PASS: triggered is not true (as expected with no issue comment context)"
 
       - name: Assert continue is empty or false
         env:
@@ -41,4 +41,4 @@ jobs:
             echo "FAIL: expected continue to be empty or false under workflow_dispatch"
             exit 1
           fi
-          echo "PASS: continue is not true (as expected with no PR comment context)"
+          echo "PASS: continue is not true (as expected)"

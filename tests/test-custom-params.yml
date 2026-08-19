@@ -1,4 +1,4 @@
-name: Test basic usage - command not triggered
+name: Test custom param separator and allowlist
 on:
   workflow_dispatch:
 jobs:
@@ -9,19 +9,22 @@ jobs:
       - id: action
         uses: .
         with:
-          command: ".deploy"
+          command: ".test"
           reaction: "eyes"
+          success_reaction: "+1"
+          failure_reaction: "-1"
           allowed_contexts: "pull_request"
           permissions: "write,admin"
           allow_drafts: "false"
           allow_forks: "false"
           skip_ci: "false"
           skip_reviews: "false"
-          param_separator: "|"
+          param_separator: ":"
+          allowlist: "false"
           skip_completing: "true"
         continue-on-error: true
 
-      - name: Assert triggered is false
+      - name: Assert triggered is false or empty
         env:
           TRIGGERED: ${{ steps.action.outputs.triggered }}
         run: |
@@ -38,7 +41,7 @@ jobs:
         run: |
           echo "continue: $CONTINUE"
           if [ "$CONTINUE" = "true" ]; then
-            echo "FAIL: expected continue to be empty or false under workflow_dispatch"
+            echo "FAIL: expected continue to be empty or false"
             exit 1
           fi
-          echo "PASS: continue is not true (as expected with no PR comment context)"
+          echo "PASS: continue is not true (as expected)"

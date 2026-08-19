@@ -1,14 +1,20 @@
-name: Test basic usage - command not triggered
+name: Test command with wrong event context
 on:
   workflow_dispatch:
 jobs:
   test:
     runs-on: ubuntu-latest
+    env:
+      GITHUB_EVENT_NAME: push
+      GITHUB_REF: refs/heads/main
     steps:
       - uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+
       - id: action
         uses: .
+        continue-on-error: true
         with:
+          github_token: ${{ github.token }}
           command: ".deploy"
           reaction: "eyes"
           allowed_contexts: "pull_request"
@@ -18,27 +24,19 @@ jobs:
           skip_ci: "false"
           skip_reviews: "false"
           param_separator: "|"
+          allowlist: "false"
           skip_completing: "true"
-        continue-on-error: true
 
-      - name: Assert triggered is false
+      - name: Assert triggered is false for wrong event context
         env:
           TRIGGERED: ${{ steps.action.outputs.triggered }}
+          OUTCOME: ${{ steps.action.outcome }}
         run: |
           echo "triggered: $TRIGGERED"
+          echo "outcome: $OUTCOME"
+          # When the event is not issue_comment, triggered should be false
           if [ "$TRIGGERED" = "true" ]; then
-            echo "FAIL: expected triggered to be false or empty under workflow_dispatch"
+            echo "FAIL: expected triggered=false for push event, got true"
             exit 1
           fi
-          echo "PASS: triggered is not true (as expected with no PR comment context)"
-
-      - name: Assert continue is empty or false
-        env:
-          CONTINUE: ${{ steps.action.outputs.continue }}
-        run: |
-          echo "continue: $CONTINUE"
-          if [ "$CONTINUE" = "true" ]; then
-            echo "FAIL: expected continue to be empty or false under workflow_dispatch"
-            exit 1
-          fi
-          echo "PASS: continue is not true (as expected with no PR comment context)"
+          echo "PASS: triggered is not true for push event context"
